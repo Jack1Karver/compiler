@@ -1,29 +1,30 @@
-import React from 'react';
+import React, { useState } from 'react';
+import { LexAnalyzer } from '../../store/LexAnalyzer';
 
 const MainApp = () => {
-    const MainStore = () => {
-        
-    }
+  const [analyzer] = useState(() => new LexAnalyzer());
 
-    const onFileLoad = (e) => {      
-      const file = e.target.files[0];
-      const reader = new FileReader();
-      if (file.name.split('.').pop() == 'txt') {
-        // setButDisable(false);
-        reader.readAsText(file, 'utf-8');
-        reader.onload = () => {
-          jsonStore.tokens.tokens = JSON.parse(reader.result!.toString());
-        };
-      } else {
-        notificationNotJson();
-        setButDisable(true);
-      }
+  //@ts-ignore
+  const onFileLoad = e => {
+    const file = e.target.files[0];
+    const reader = new FileReader();
+    if (file.name.split('.').pop() == 'txt') {
+      // setButDisable(false);
+      reader.readAsText(file, 'utf-8');
+      reader.onload = () => {
+        console.log(reader.result?.toString());
+        analyzer.setSource(reader.result!.toString());
+      };
+    } else {
+      // notificationNotJson();
+      // setButDisable(true);
+    }
   };
 
   return (
     <>
       <div>
-        <input type={'file'} onLoad={onFileLoad} placeholder={'input file'} />
+        <input type={'file'} onInput={onFileLoad} placeholder={'input file'} />
       </div>
     </>
   );
