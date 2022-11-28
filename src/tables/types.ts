@@ -9,7 +9,7 @@ export const identifiers = {
   },
   word: {
     name: 'word',
-    reg: /^[A-Za-z_]\w*/,
+    reg: /^[A-Za-z][A-Za-z0-9]*/,
   },
   comment: {
     name: 'comment',

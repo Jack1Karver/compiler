@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { LexAnalyzer } from '../../store/LexAnalyzer';
+import { LexAnalyzer } from '../../store/scanner/LexAnalyzer';
 
 const MainApp = () => {
   const [analyzer] = useState(() => new LexAnalyzer());

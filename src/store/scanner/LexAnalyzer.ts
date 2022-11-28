@@ -1,12 +1,22 @@
-import { limiters } from '../tables/table-limiters';
-import { words } from '../tables/table-words';
-import { identifiers } from '../tables/types';
+import { limiters } from '../../tables/table-limiters';
+import { words } from '../../tables/table-words';
+import { identifiers } from '../../tables/types';
+
+export interface NodeInterface {
+  tableId: number; elemId: number;
+}
+
+export interface Identifier{
+  value: string;
+  type?: string;
+  declared?: boolean;
+}
 
 export class LexAnalyzer {
   source: string = '';
   stack: string[] = [];
-  result: { tableId: number; elemId: number }[] = [];
-  idTable: string[] = [];
+  result: NodeInterface[] = [];
+  idTable: Identifier[] = [];
   numTable: string[] = [];
 
   setSource = (source: string) => {
@@ -19,7 +29,7 @@ export class LexAnalyzer {
     start: while (this.source.length > 0) {
       console.log(this.result);
       console.log(this.source);
-      let matcher: string | undefined;      
+      let matcher: string | undefined;
       const wordIndex = words.findIndex((word, index) => {
         if (word.reg.exec(this.source)?.[0]) {
           this.source = this.source.slice(word.name.length);
@@ -35,7 +45,7 @@ export class LexAnalyzer {
       const limitIndex = limiters.findIndex((limiter, index) => {
         if (limiter.reg.exec(this.source)?.[0]) {
           this.source = this.source.slice(limiter.name.length);
-          return index; 
+          return index;
         }
       });
 
@@ -47,7 +57,7 @@ export class LexAnalyzer {
       matcher = identifiers.word.reg.exec(this.source)?.[0];
 
       if (matcher) {
-        let index = this.idTable.findIndex(id => id == matcher);
+        let index = this.idTable.findIndex(id => id.value == matcher);
         if (index !== -1) {
           this.result.push({
             tableId: 4,
@@ -56,11 +66,11 @@ export class LexAnalyzer {
         } else {
           this.result.push({
             tableId: 4,
-            elemId: this.idTable.push(this.source.slice(0, matcher.length))-1,
+            elemId: this.idTable.push({value: this.source.slice(0, matcher.length) }) - 1,
           });
         }
-          this.source = this.source.slice(matcher.length);          
-        
+        this.source = this.source.slice(matcher.length);
+
         continue start;
       }
 
@@ -76,9 +86,9 @@ export class LexAnalyzer {
         } else {
           this.result.push({
             tableId: 3,
-            elemId: this.numTable.push(this.source.slice(0, matcher.length))-1,
+            elemId: this.numTable.push(this.source.slice(0, matcher.length)) - 1,
           });
-        }       
+        }
         this.source = this.source.slice(matcher.length);
 
         continue start;
@@ -86,14 +96,14 @@ export class LexAnalyzer {
 
       matcher = identifiers.space.reg.exec(this.source)?.[0];
 
-      if (matcher) {       
+      if (matcher) {
         this.source = this.source.slice(1);
         continue start;
       }
 
       matcher = identifiers.comment.reg.exec(this.source)?.[0];
 
-      if (matcher) {        
+      if (matcher) {
         this.source = this.source.slice(matcher.length);
         continue start;
       }
