@@ -1,6 +1,11 @@
 import { NodeInterface } from '../scanner/LexAnalyzer';
 import { Identifier } from 'typescript';
 
+export interface MatcherInterface {
+  tableId: number;
+  elemId?: number;
+}
+
 export class ParserClass {
   source: NodeInterface[];
   stack: string[] = [];
@@ -8,22 +13,28 @@ export class ParserClass {
   idTable: Identifier[];
   numTable: string[];
 
-  constructor(source: NodeInterface[], idTable: Identifier[], numTable: string[]) {
+  constructor(
+    source: NodeInterface[],
+    idTable: Identifier[],
+    numTable: string[]
+  ) {
     this.source = source;
     this.idTable = idTable;
     this.numTable = numTable;
   }
 
-  matchNode = (tabId: number, elemId?: number) => {
+  matchNode = (tableId: number, elemId?: number):boolean => {
     if (this.source.length <= this.pos + 1) {
       throw new Error();
     }
     let result: boolean;
     if (elemId) {
-      result = this.source[this.pos].elemId === elemId && this.source[this.pos].tableId === tabId;
+      result =
+        this.source[this.pos].elemId === elemId &&
+        this.source[this.pos].tableId === tableId;
       return result;
     } else {
-      result = this.source[this.pos].tableId === tabId;
+      result = this.source[this.pos].tableId === tableId;
     }
     if (result) {
       this.pos++;
@@ -31,21 +42,40 @@ export class ParserClass {
     return result;
   };
 
-  zeroAndMore = (rules: (() => boolean | boolean)[], condition: NodeInterface, branching: boolean): boolean => {
-    if (this.matchNode(condition.tableId, condition.elemId)) {
-      const res = this.parseRules(branching, rules);
-      if (res) {
-        this.zeroAndMore(rules, condition, branching);
-      }
+  zeroAndMore = (
+    rules: (() => boolean)[],
+    branching: boolean = false
+  ): boolean => {
+    const res = this.parseRules(rules, branching);
+    if (res) {
+      this.zeroAndMore(rules, branching);
     }
+
     return true;
   };
 
-  oneAndMore = () => {};
+  oneAndMore = (
+    rules: (() => boolean)[],
+    branching: boolean = false
+  ): boolean => {
+    const res = this.parseRules(rules, branching);
+    if (res) {
+      this.oneAndMore(rules, branching);
+      return true;
+    }
 
-  zeroOrOne = () => {};
+    return false;
+  };
 
-  parseRules = (branching: boolean, rules: (() => boolean | boolean)[]) => {
+  zeroOrOne = (
+    rules: (() => boolean)[],
+    branching: boolean = false
+  ): boolean => {
+    this.parseRules(rules, branching);
+    return true;
+  };
+
+  parseRules = (rules: (() => boolean)[], branching: boolean = false):boolean => {
     let startPos = this.pos;
     let res: boolean;
     switch (branching) {
@@ -56,7 +86,7 @@ export class ParserClass {
           }
           return prev || cur();
         }, false);
-            break;
+        break;
       }
       case false: {
         res = rules.reduce((prev, cur) => {
@@ -64,13 +94,13 @@ export class ParserClass {
             return prev && cur;
           }
           return prev && cur();
-        }, false);
-            break;
+        }, true);
+        break;
       }
-      }
-      if (!res) {
-        this.pos = startPos;
-      }
-      return res;
+    }
+    if (!res) {
+      this.pos = startPos;
+    }
+    return res;
   };
 }
