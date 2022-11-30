@@ -6,7 +6,7 @@ export interface NodeInterface {
   tableId: number; elemId: number;
 }
 
-export interface Identifier{
+export interface IIdentifier{
   value: string;
   type?: string;
   declared?: boolean;
@@ -16,7 +16,7 @@ export class LexAnalyzer {
   source: string = '';
   stack: string[] = [];
   result: NodeInterface[] = [];
-  idTable: Identifier[] = [];
+  idTable: IIdentifier[] = [];
   numTable: string[] = [];
 
   setSource = (source: string) => {

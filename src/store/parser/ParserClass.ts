@@ -1,5 +1,6 @@
-import { NodeInterface } from '../scanner/LexAnalyzer';
-import { Identifier } from 'typescript';
+import { IIdentifier, NodeInterface } from '../scanner/LexAnalyzer';
+import { words } from '../../tables/table-words';
+import { limiters } from '../../tables/table-limiters';
 
 export interface MatcherInterface {
   tableId: number;
@@ -10,17 +11,34 @@ export class ParserClass {
   source: NodeInterface[];
   stack: string[] = [];
   pos: number = 0;
-  idTable: Identifier[];
+  idTable: IIdentifier[];
   numTable: string[];
 
   constructor(
     source: NodeInterface[],
-    idTable: Identifier[],
+    idTable: IIdentifier[],
     numTable: string[]
   ) {
     this.source = source;
     this.idTable = idTable;
     this.numTable = numTable;
+  }
+
+  getElement = (tabId: number, elemId: number) => {
+    switch (tabId) {
+      case 1: {
+        return words[elemId].name;
+      }
+      case 2: {
+        return limiters[elemId].name;
+      }
+      case 1: {
+        return this.numTable[elemId];
+      }
+      case 1: {
+        return this.idTable[elemId].value;
+      }
+    }
   }
 
   matchNode = (tableId: number, elemId?: number):boolean => {

@@ -4,7 +4,12 @@ class Parser extends ParserClass {
   start = () => {    
     const result = this.program();
     if (!result) {
-      throw new Error(`Error on position ${this.pos}`)
+      throw new Error(
+        `Error on position ${this.pos} at ${this.getElement(
+          this.source[this.pos].tableId,
+          this.source[this.pos].elemId
+        )}`
+      );
     }
     
   };
