@@ -142,9 +142,9 @@ class Parser extends ParserClass {
     console.log('output');
     return this.parseRules([
       () => this.matchNode(1, 15),
-      () => this.matchNode(4),
+      this.expression,
       () =>
-        this.zeroAndMore([() => this.matchNode(2, 8), () => this.matchNode(4)]),
+        this.zeroAndMore([() => this.matchNode(2, 8), this.expression]),
     ]);
   };
 
