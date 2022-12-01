@@ -23,12 +23,10 @@ class Parser extends ParserClass {
             [
               () => this.parseRules([this.statement, this.description], true),
               () => this.matchNode(2, 15),
-            ],
-            false
+            ]            
           ),
         () => this.matchNode(2, 7),
-      ],
-      false
+      ],      
     );
   };
 
