@@ -1,17 +1,17 @@
 import { ParserClass } from './ParserClass';
 
 class Parser extends ParserClass {
-  start = () => {    
+  start = () => {
     const result = this.program();
     if (!result) {
       throw new Error(
-        `Error on position ${this.pos} at ${this.getElement(
-          this.source[this.pos].tableId,
-          this.source[this.pos].elemId
+        `Error on position ${this.errorPos+1} at ${this.getElement(
+          this.source[this.errorPos].tableId,
+          this.source[this.errorPos].elemId
         )}`
       );
     }
-    
+    console.log("You're breathtaking!");
   };
 
   program = (): boolean => {
@@ -33,22 +33,24 @@ class Parser extends ParserClass {
   };
 
   description = () => {
+    console.log('description');
     return this.zeroAndMore(
       [
         () => this.parseRules([() => this.matchNode(4)], false),
         () =>
           this.zeroAndMore(
-            [() => this.matchNode(2, 15), () => this.matchNode(2, 4)],
+            [() => this.matchNode(2, 8), () => this.matchNode(4)],
             false
           ),
         () =>
-          this.parseRules([this.typeVar, () => this.matchNode(2, 15)], false),
+          this.parseRules([()=>this.matchNode(2, 10),this.typeVar, () => this.matchNode(2, 15)], false),
       ],
       false
     );
   };
 
   typeVar = () => {
+    console.log('typeVar');
     return this.parseRules(
       [
         () => this.matchNode(1, 2),
@@ -60,6 +62,7 @@ class Parser extends ParserClass {
   };
 
   statement = () => {
+    console.log('statement');
     const rules = [
       this.composite,
       this.assignment,
@@ -73,6 +76,7 @@ class Parser extends ParserClass {
   };
 
   composite = (): boolean => {
+    console.log('composite');
     return this.parseRules([
       () => this.matchNode(1, 5),
       this.statement,
@@ -82,6 +86,7 @@ class Parser extends ParserClass {
   };
 
   assignment = () => {
+    console.log('assignment');
     return this.parseRules([
       () => this.matchNode(4),
       () => this.matchNode(2, 9),
@@ -90,6 +95,7 @@ class Parser extends ParserClass {
   };
 
   conditional = (): boolean => {
+    console.log('conditional');
     return this.parseRules([
       () => this.matchNode(1, 7),
       () => this.matchNode(2, 11),
@@ -101,6 +107,7 @@ class Parser extends ParserClass {
   };
 
   fixedCycle = (): boolean => {
+    console.log('fixedCycle');
     return this.parseRules([
       () => this.matchNode(1, 9),
       this.assignment,
@@ -113,6 +120,7 @@ class Parser extends ParserClass {
   };
 
   conditionalCycle = (): boolean => {
+    console.log('conditionalCycle');
     return this.parseRules([
       () => this.matchNode(1, 13),
       () => this.matchNode(2, 11),
@@ -123,6 +131,7 @@ class Parser extends ParserClass {
   };
 
   input = () => {
+    console.log('input');
     return this.parseRules([
       () => this.matchNode(1, 14),
       () => this.matchNode(4),
@@ -132,6 +141,7 @@ class Parser extends ParserClass {
   };
 
   output = () => {
+    console.log('output');
     return this.parseRules([
       () => this.matchNode(1, 15),
       () => this.matchNode(4),
@@ -141,6 +151,7 @@ class Parser extends ParserClass {
   };
 
   expression = () => {
+    console.log('expression');
     return this.parseRules([
       this.operand,
       () => this.zeroAndMore([this.GORelationships, this.operand]),
@@ -148,6 +159,7 @@ class Parser extends ParserClass {
   };
 
   operand = () => {
+    console.log('operand');
     return this.parseRules([
       this.summand,
       () => this.zeroAndMore([this.GOAddition, this.summand]),
@@ -155,6 +167,7 @@ class Parser extends ParserClass {
   };
 
   summand = () => {
+    console.log('summand');
     return this.parseRules([
       this.multiplier,
       () => this.zeroAndMore([this.GOMultiplication, this.multiplier]),
@@ -162,19 +175,26 @@ class Parser extends ParserClass {
   };
 
   multiplier = () => {
+    console.log('multiplier');
     return this.parseRules(
       [
         () => this.matchNode(4),
         () => this.matchNode(3),
         this.logical,
         () => this.parseRules([this.unary, this.multiplier]),
-        this.expression,
+        () =>
+          this.parseRules([
+            () => this.matchNode(2, 11),
+            this.expression,
+            () => this.matchNode(2, 12),
+          ]),
       ],
       true
     );
   };
 
   GOAddition = () => {
+    console.log('GOAddition');
     let rules: (() => boolean)[] = [];
     for (let i = 18; i < 21; i++) {
       rules.push(() => this.matchNode(2, i));
@@ -183,6 +203,7 @@ class Parser extends ParserClass {
   };
 
   GORelationships = () => {
+    console.log('goRel');
     let rules: (() => boolean)[] = [];
     for (let i = 0; i < 6; i++) {
       rules.push(() => this.matchNode(2, i));
@@ -191,6 +212,7 @@ class Parser extends ParserClass {
   };
 
   GOMultiplication = () => {
+    console.log('GOMultiplication');
     let rules: (() => boolean)[] = [];
     for (let i = 21; i < 24; i++) {
       rules.push(() => this.matchNode(2, i));
@@ -199,10 +221,12 @@ class Parser extends ParserClass {
   };
 
   unary = () => {
+    console.log('unary');
     return this.parseRules([() => this.matchNode(2, 17)]);
   };
 
   logical = () => {
+    console.log('logical');
     return this.parseRules(
       [() => this.matchNode(1, 0), () => this.matchNode(1, 1)],
       true

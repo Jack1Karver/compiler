@@ -11,6 +11,7 @@ export class ParserClass {
   source: NodeInterface[];
   stack: string[] = [];
   pos: number = 0;
+  errorPos:number = 0;
   idTable: IIdentifier[];
   numTable: string[];
 
@@ -32,30 +33,45 @@ export class ParserClass {
       case 2: {
         return limiters[elemId].name;
       }
-      case 1: {
+      case 3: {
         return this.numTable[elemId];
       }
-      case 1: {
+      case 4: {
         return this.idTable[elemId].value;
       }
     }
   }
 
   matchNode = (tableId: number, elemId?: number):boolean => {
-    if (this.source.length <= this.pos + 1) {
+    if (this.source.length <= this.pos) {
       throw new Error();
     }
     let result: boolean;
-    if (elemId) {
+    console.log('reqiure '+this.getElement(this.source[this.pos].tableId, this.source[this.pos].elemId)+' '+this.source[this.pos].tableId +' '+this.source[this.pos].elemId);
+    if (elemId!==undefined) {
+       console.log('wait ' +
+         this.getElement(
+           tableId,
+           elemId
+         ) + ' ' + tableId +' '+ elemId
+       );
+    } else {
+       console.log(         
+           'wait '+tableId           
+       );
+    }
+    console.log('pos: ' + this.pos);
+   
+    if (elemId!==undefined) {
       result =
-        this.source[this.pos].elemId === elemId &&
-        this.source[this.pos].tableId === tableId;
-      return result;
+        (this.source[this.pos].elemId === elemId &&
+        this.source[this.pos].tableId === tableId);      
     } else {
       result = this.source[this.pos].tableId === tableId;
     }
     if (result) {
-      this.pos++;
+      ++this.pos;
+      console.log('++');
     }
     return result;
   };
@@ -74,11 +90,12 @@ export class ParserClass {
 
   oneAndMore = (
     rules: (() => boolean)[],
-    branching: boolean = false
+    branching: boolean = false,
+    required: boolean = true
   ): boolean => {
-    const res = this.parseRules(rules, branching);
+    const res = this.parseRules(rules, branching, required);
     if (res) {
-      this.oneAndMore(rules, branching);
+      this.oneAndMore(rules, branching, false);
       return true;
     }
 
@@ -89,11 +106,11 @@ export class ParserClass {
     rules: (() => boolean)[],
     branching: boolean = false
   ): boolean => {
-    this.parseRules(rules, branching);
+    this.parseRules(rules, branching, false);
     return true;
   };
 
-  parseRules = (rules: (() => boolean)[], branching: boolean = false):boolean => {
+  parseRules = (rules: (() => boolean)[], branching: boolean = false, required: boolean = true):boolean => {
     let startPos = this.pos;
     let res: boolean;
     switch (branching) {
@@ -116,7 +133,10 @@ export class ParserClass {
         break;
       }
     }
-    if (!res) {
+    if (!res && required) {
+      if (this.errorPos < this.pos) {
+        this.errorPos = this.pos
+      }
       this.pos = startPos;
     }
     return res;

@@ -1,12 +1,14 @@
 import { limiters } from '../../tables/table-limiters';
 import { words } from '../../tables/table-words';
 import { identifiers } from '../../tables/types';
+import Parser from '../parser/Parser';
 
 export interface NodeInterface {
-  tableId: number; elemId: number;
+  tableId: number;
+  elemId: number;
 }
 
-export interface IIdentifier{
+export interface IIdentifier {
   value: string;
   type?: string;
   declared?: boolean;
@@ -22,13 +24,10 @@ export class LexAnalyzer {
   setSource = (source: string) => {
     this.source = source;
     this.startAnalyzing();
-    console.log(this.source.split(''));
   };
 
   startAnalyzing = () => {
-    start: while (this.source.length > 0) {
-      console.log(this.result);
-      console.log(this.source);
+    while (this.source.length > 0) {
       let matcher: string | undefined;
       const wordIndex = words.findIndex((word, index) => {
         if (word.reg.exec(this.source)?.[0]) {
@@ -57,7 +56,7 @@ export class LexAnalyzer {
       matcher = identifiers.word.reg.exec(this.source)?.[0];
 
       if (matcher) {
-        let index = this.idTable.findIndex(id => id.value == matcher);
+        let index = this.idTable.findIndex(id => id.value === matcher);
         if (index !== -1) {
           this.result.push({
             tableId: 4,
@@ -66,18 +65,21 @@ export class LexAnalyzer {
         } else {
           this.result.push({
             tableId: 4,
-            elemId: this.idTable.push({value: this.source.slice(0, matcher.length) }) - 1,
+            elemId:
+              this.idTable.push({
+                value: this.source.slice(0, matcher.length),
+              }) - 1,
           });
         }
         this.source = this.source.slice(matcher.length);
 
-        continue start;
+        continue;
       }
 
       matcher = identifiers.number.reg.exec(this.source)?.[0];
 
       if (matcher) {
-        let index = this.numTable.findIndex(num => num == matcher);
+        let index = this.numTable.findIndex(num => num === matcher);
         if (index !== -1) {
           this.result.push({
             tableId: 3,
@@ -86,26 +88,27 @@ export class LexAnalyzer {
         } else {
           this.result.push({
             tableId: 3,
-            elemId: this.numTable.push(this.source.slice(0, matcher.length)) - 1,
+            elemId:
+              this.numTable.push(this.source.slice(0, matcher.length)) - 1,
           });
         }
         this.source = this.source.slice(matcher.length);
 
-        continue start;
+        continue;
       }
 
       matcher = identifiers.space.reg.exec(this.source)?.[0];
 
       if (matcher) {
         this.source = this.source.slice(1);
-        continue start;
+        continue;
       }
 
       matcher = identifiers.comment.reg.exec(this.source)?.[0];
 
       if (matcher) {
         this.source = this.source.slice(matcher.length);
-        continue start;
+        continue;
       }
 
       throw new Error();
@@ -113,5 +116,7 @@ export class LexAnalyzer {
     console.log(this.result);
     console.log(this.idTable);
     console.log(this.numTable);
+    const parser = new Parser(this.result, this.idTable, this.numTable);
+    parser.start();
   };
 }
