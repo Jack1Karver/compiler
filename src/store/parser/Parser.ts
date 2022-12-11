@@ -1,50 +1,83 @@
-import { ParserClass } from './ParserClass';
+import { IIdentifier, NodeInterface } from '../scanner/LexAnalyzer';
+import { ParserClass, types } from './ParserClass';
+import { RPN } from './RPN';
 
 class Parser extends ParserClass {
   start = () => {
     const result = this.program();
     if (!result) {
       throw new Error(
-        `Error on position ${this.errorPos+1} at ${this.getElement(
-          this.source[this.errorPos].tableId,
-          this.source[this.errorPos].elemId
+        `Error on position ${this.errorPos + 1} at ${this.getElement(
+          this.source[this.errorPos]
         )}`
       );
     }
     console.log("You're breathtaking!");
+    console.log(this.idTable);
+    console.log(this.source);
   };
 
   program = (): boolean => {
-    return this.parseRules(
-      [
-        () => this.matchNode(2, 6),
-        () =>
-          this.oneAndMore(
-            [
-              () => this.parseRules([this.statement, this.description], true),
-              () => this.matchNode(2, 15),
-            ]            
-          ),
-        () => this.matchNode(2, 7),
-      ],      
-    );
+    console.log('program');
+    return this.parseRules([
+      () => this.matchNode(2, 6),
+      () =>
+        this.oneAndMore([
+          () => this.parseRules([this.description, this.statement], true),
+          () => this.matchNode(2, 15),
+        ]),
+      () => this.matchNode(2, 7),
+    ]);
   };
 
   description = () => {
     console.log('description');
-    return this.zeroAndMore(
-      [
-        () => this.parseRules([() => this.matchNode(4)], false),
-        () =>
-          this.zeroAndMore(
-            [() => this.matchNode(2, 8), () => this.matchNode(4)],
-            false
-          ),
-        () =>
-          this.parseRules([()=>this.matchNode(2, 10),this.typeVar, () => this.matchNode(2, 15)], false),
-      ],
-      false
-    );
+    let startPos: number = this.pos;
+    const result = this.oneAndMore([
+      () => this.parseRules([() => this.matchNode(4)]),
+      () =>
+        this.zeroAndMore([() => this.matchNode(2, 8), () => this.matchNode(4)]),
+      () =>
+        this.parseRules([
+          () => this.matchNode(2, 10),
+          this.typeVar,
+          () => this.matchNode(2, 15),
+        ]),
+    ]);
+    console.log(result);
+    if (result && startPos < this.pos) {
+      console.log('res');
+      this.checkDescription(startPos);
+    }
+    return result;
+  };
+
+  checkDescription = (startPos: number) => {
+    console.log('checkDesc');
+    let identifiers: NodeInterface[] = [];
+    for (startPos; startPos < this.pos; startPos++) {
+      let variable = this.source[startPos];
+      let id = variable.tableId == 4;
+      if (id) {
+        identifiers.push(this.source[startPos]);
+        continue;
+      }
+      console.log(identifiers);
+      let varType = variable.tableId == 1;
+      if (varType) {
+        identifiers.forEach(identifier => {
+          if (this.idTable[identifier.elemId].type) {
+            throw new Error(
+              `Re-declaring a variable ${this.getElement(
+                identifier
+              )} at position ${startPos}`
+            );
+          }
+          this.idTable[identifier.elemId].type = variable;
+        });
+        break;
+      }
+    }
   };
 
   typeVar = () => {
@@ -85,47 +118,85 @@ class Parser extends ParserClass {
 
   assignment = () => {
     console.log('assignment');
-    return this.parseRules([
+    let startPos = this.pos;
+    const result = this.parseRules([
       () => this.matchNode(4),
       () => this.matchNode(2, 9),
-      this.expression,
     ]);
+    const expRes = this.parseRules([this.expression]);
+    if (result && expRes) {
+      let leftNode: IIdentifier;
+      const exp: NodeInterface[] = [];
+      leftNode = this.idTable[this.source[startPos].elemId];
+      for (let i = startPos + 2; i < this.pos; i++) {
+        exp.push(this.source[i]);
+      }
+      let rightType = this.checkExp(exp, startPos + 2);
+      console.log(leftNode.type);
+      console.log(rightType);
+      if (leftNode.type?.elemId != rightType.elemId) {
+        throw new Error(
+          `Type '${this.getElement(
+            rightType
+          )}' is not assignable to type '${this.getElement(leftNode.type!)}'`
+        );
+      }
+      this.idTable[this.source[startPos].elemId].assigned=true;
+    }
+
+    return result && expRes;
   };
 
   conditional = (): boolean => {
     console.log('conditional');
-    return this.parseRules([
+    const result = this.parseRules([
       () => this.matchNode(1, 7),
       () => this.matchNode(2, 11),
-      this.expression,
-      () => this.matchNode(2, 12),
-      this.statement,
-      () => this.zeroOrOne([() => this.matchNode(1, 8), this.statement]),
     ]);
+    const expRes = this.checkStatementExp(this.expression);
+    return (
+      result &&
+      expRes &&
+      this.parseRules([
+        () => this.matchNode(2, 12),
+        this.statement,
+        () => this.zeroOrOne([() => this.matchNode(1, 8), this.statement]),
+      ])
+    );
   };
 
   fixedCycle = (): boolean => {
     console.log('fixedCycle');
-    return this.parseRules([
+    const result = this.parseRules([
       () => this.matchNode(1, 9),
       this.assignment,
       () => this.matchNode(1, 10),
-      this.expression,
-      () => this.zeroOrOne([() => this.matchNode(1, 11), this.expression]),
-      this.statement,
-      () => this.matchNode(1, 12),
     ]);
+    const expRes = this.checkStatementExp(this.expression);
+    return (
+      result &&
+      expRes &&
+      this.parseRules([
+        () => this.zeroOrOne([() => this.matchNode(1, 11), this.expression]),
+        this.statement,
+        () => this.matchNode(1, 12),
+      ])
+    );
   };
 
   conditionalCycle = (): boolean => {
-    console.log('conditionalCycle');
-    return this.parseRules([
+    console.log('condCycle');
+    const result = this.parseRules([
       () => this.matchNode(1, 13),
       () => this.matchNode(2, 11),
-      this.expression,
-      () => this.matchNode(2, 12),
-      this.statement,
     ]);
+
+    const expRes = this.checkStatementExp(this.expression);
+    return (
+      result &&
+      expRes &&
+      this.parseRules([() => this.matchNode(2, 12), this.statement])
+    );
   };
 
   input = () => {
@@ -143,17 +214,58 @@ class Parser extends ParserClass {
     return this.parseRules([
       () => this.matchNode(1, 15),
       this.expression,
-      () =>
-        this.zeroAndMore([() => this.matchNode(2, 8), this.expression]),
+      () => this.zeroAndMore([() => this.matchNode(2, 8), this.expression]),
     ]);
   };
 
   expression = () => {
     console.log('expression');
-    return this.parseRules([
+    let startPos = this.pos;
+    const result = this.parseRules([
       this.operand,
       () => this.zeroAndMore([this.GORelationships, this.operand]),
     ]);
+    console.log('Exp result' + result);
+    if (result) {
+      console.log('toRPN');
+      let exp: NodeInterface[] = [];
+      for (let i = startPos; i < this.pos; i++) {
+        exp.push(this.source[i]);
+      }
+      console.log(exp);
+      const RPNClass = new RPN(exp);
+      const nodesRPN = RPNClass.start();
+      console.log(
+        nodesRPN
+          .map(elem => {
+            return this.getElement(elem);
+          })
+          .join(' ')
+      );
+      let sourceBeg = this.source.slice(0, startPos);
+      let sourceEnd = this.source.slice(this.pos);
+      const newSource = sourceBeg.concat(nodesRPN, sourceEnd);
+      console.log('before source ');
+      console.log(
+        this.source
+          .map(elem => {
+            return this.getElement(elem);
+          })
+          .join(' ')
+      );
+      this.pos -= this.source.length - newSource.length;
+      this.source = newSource;
+      console.log('after source');
+      console.log(
+        this.source
+          .map(elem => {
+            return this.getElement(elem);
+          })
+          .join(' ')
+      );
+    }
+
+    return result;
   };
 
   operand = () => {

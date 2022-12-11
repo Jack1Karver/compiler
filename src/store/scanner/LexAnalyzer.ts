@@ -1,6 +1,6 @@
 import { limiters } from '../../tables/table-limiters';
 import { words } from '../../tables/table-words';
-import { identifiers } from '../../tables/types';
+import { expressions } from '../../tables/types';
 import Parser from '../parser/Parser';
 
 export interface NodeInterface {
@@ -10,8 +10,8 @@ export interface NodeInterface {
 
 export interface IIdentifier {
   value: string;
-  type?: string;
-  declared?: boolean;
+  type?: NodeInterface;
+  assigned?: boolean;
 }
 
 export class LexAnalyzer {
@@ -53,7 +53,7 @@ export class LexAnalyzer {
         continue;
       }
 
-      matcher = identifiers.word.reg.exec(this.source)?.[0];
+      matcher = expressions.word.reg.exec(this.source)?.[0];
 
       if (matcher) {
         let index = this.idTable.findIndex(id => id.value === matcher);
@@ -68,6 +68,7 @@ export class LexAnalyzer {
             elemId:
               this.idTable.push({
                 value: this.source.slice(0, matcher.length),
+                assigned: false
               }) - 1,
           });
         }
@@ -76,7 +77,7 @@ export class LexAnalyzer {
         continue;
       }
 
-      matcher = identifiers.number.reg.exec(this.source)?.[0];
+      matcher = expressions.number.reg.exec(this.source)?.[0];
 
       if (matcher) {
         let index = this.numTable.findIndex(num => num === matcher);
@@ -97,14 +98,14 @@ export class LexAnalyzer {
         continue;
       }
 
-      matcher = identifiers.space.reg.exec(this.source)?.[0];
+      matcher = expressions.space.reg.exec(this.source)?.[0];
 
       if (matcher) {
         this.source = this.source.slice(1);
         continue;
       }
 
-      matcher = identifiers.comment.reg.exec(this.source)?.[0];
+      matcher = expressions.comment.reg.exec(this.source)?.[0];
 
       if (matcher) {
         this.source = this.source.slice(matcher.length);
