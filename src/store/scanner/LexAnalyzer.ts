@@ -33,7 +33,6 @@ export class LexAnalyzer {
       let matcher: string | undefined;
       const wordIndex = words.findIndex((word, index) => {        
         if (word.reg.exec(this.source)?.[0]) {
-          console.log(word.name);
           this.source = this.source.slice(word.name.length);
           return index;
         }
@@ -94,7 +93,7 @@ export class LexAnalyzer {
           this.result.push({
             tableId: 3,
             elemId:
-              this.numTable.push(this.toBinary(numeric)) - 1,
+              this.numTable.push(numeric) - 1,
           });
         }
         this.source = this.source.slice(matcher.length);
@@ -134,6 +133,8 @@ export class LexAnalyzer {
         }               
       }
     })
+    console.log(num); 
+    console.log(numType);
     switch (numType) {
       case 'real':{
         return parseFloat(num).toString(2);

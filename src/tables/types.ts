@@ -18,9 +18,9 @@ export const expressions = {
 };
 
 export const numbers = {
-  real: /d*.d*([Ee]?[+-]?d+)?$/,
+  real: /\d*\.\d*([Ee]?[+-]?\d+)?$/,
   bin: /[0-1]+[bB]$/,
   oct: /[0-8]+[oO]$/,
   dec: /\d+[dD]?$/,
-  hex: /\d[a-fA-F\d]*[hH]$/
+  hex: /\d[a-fA-F\d]*[hH]$/,
 };
