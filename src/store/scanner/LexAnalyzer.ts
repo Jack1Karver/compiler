@@ -1,6 +1,6 @@
 import { limiters } from '../../tables/table-limiters';
 import { words } from '../../tables/table-words';
-import { expressions } from '../../tables/types';
+import { expressions, numbers } from '../../tables/types';
 import Parser from '../parser/Parser';
 
 export interface NodeInterface {
@@ -16,21 +16,24 @@ export interface IIdentifier {
 
 export class LexAnalyzer {
   source: string = '';
-  stack: string[] = [];
   result: NodeInterface[] = [];
   idTable: IIdentifier[] = [];
   numTable: string[] = [];
 
   setSource = (source: string) => {
     this.source = source;
+    this.result = [];
+    this.idTable = [];
+    this.numTable = [];
     this.startAnalyzing();
   };
 
   startAnalyzing = () => {
     while (this.source.length > 0) {
       let matcher: string | undefined;
-      const wordIndex = words.findIndex((word, index) => {
+      const wordIndex = words.findIndex((word, index) => {        
         if (word.reg.exec(this.source)?.[0]) {
+          console.log(word.name);
           this.source = this.source.slice(word.name.length);
           return index;
         }
@@ -67,7 +70,7 @@ export class LexAnalyzer {
             tableId: 4,
             elemId:
               this.idTable.push({
-                value: this.source.slice(0, matcher.length),
+                value: matcher,
                 assigned: false
               }) - 1,
           });
@@ -80,7 +83,8 @@ export class LexAnalyzer {
       matcher = expressions.number.reg.exec(this.source)?.[0];
 
       if (matcher) {
-        let index = this.numTable.findIndex(num => num === matcher);
+        let numeric = this.toBinary(matcher);
+        let index = this.numTable.findIndex(num => num === numeric);
         if (index !== -1) {
           this.result.push({
             tableId: 3,
@@ -90,7 +94,7 @@ export class LexAnalyzer {
           this.result.push({
             tableId: 3,
             elemId:
-              this.numTable.push(this.source.slice(0, matcher.length)) - 1,
+              this.numTable.push(this.toBinary(numeric)) - 1,
           });
         }
         this.source = this.source.slice(matcher.length);
@@ -112,7 +116,7 @@ export class LexAnalyzer {
         continue;
       }
 
-      throw new Error();
+      throw new Error(`Can't find the name ${this.source.split(' ')[0]}`);
     }
     console.log(this.result);
     console.log(this.idTable);
@@ -120,4 +124,36 @@ export class LexAnalyzer {
     const parser = new Parser(this.result, this.idTable, this.numTable);
     parser.start();
   };
+
+  toBinary = (num: string):string => {
+    let numType: string = '';
+    Object.values(numbers).forEach((val, key) => {
+      if (val.exec(num)) {
+        if (!numType) {
+           numType = Object.keys(numbers)[key];
+        }               
+      }
+    })
+    switch (numType) {
+      case 'real':{
+        return parseFloat(num).toString(2);
+      }
+      case 'bin': {        
+        return num.slice(0, -1);
+      }
+      case 'oct': {
+        return parseInt(num.slice(0, -1), 8).toString(2);
+      }
+      case 'dec': {
+        if (num.split('').pop()?.match(/D|d/)) {
+          num = num.slice(0, -1);
+        }
+        return parseInt(num, 10).toString(2)
+      }
+      case 'hex': {
+        return parseInt(num.slice(0, -1), 16).toString(2);
+        }
+    }
+    return '2'
+  }
 }

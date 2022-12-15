@@ -3,7 +3,12 @@ import { ParserClass, types } from './ParserClass';
 import { RPN } from './RPN';
 
 class Parser extends ParserClass {
-  start = () => {
+  start = () => {    
+    let str = this.source.map(val => {
+      return this.getElement(val);
+    }).join(' ');
+    console.log(str);
+    
     const result = this.program();
     if (!result) {
       throw new Error(
@@ -15,6 +20,12 @@ class Parser extends ParserClass {
     console.log("You're breathtaking!");
     console.log(this.idTable);
     console.log(this.source);
+    str = this.source
+      .map(val => {
+        return this.getElement(val);
+      })
+      .join(' ');
+    console.log(str);
   };
 
   program = (): boolean => {
@@ -54,6 +65,7 @@ class Parser extends ParserClass {
 
   checkDescription = (startPos: number) => {
     console.log('checkDesc');
+    
     let identifiers: NodeInterface[] = [];
     for (startPos; startPos < this.pos; startPos++) {
       let variable = this.source[startPos];
@@ -73,9 +85,10 @@ class Parser extends ParserClass {
               )} at position ${startPos}`
             );
           }
-          this.idTable[identifier.elemId].type = variable;
-        });
-        break;
+          console.log(variable);
+          this.idTable[identifier.elemId].type = variable;          
+        });  
+        identifiers = [];
       }
     }
   };
@@ -135,11 +148,12 @@ class Parser extends ParserClass {
       console.log(leftNode.type);
       console.log(rightType);
       if (leftNode.type?.elemId != rightType.elemId) {
-        throw new Error(
-          `Type '${this.getElement(
-            rightType
-          )}' is not assignable to type '${this.getElement(leftNode.type!)}'`
-        );
+        if (!(leftNode.type?.elemId == 3)&&(rightType.elemId == 2))
+          throw new Error(
+            `Type '${this.getElement(
+              rightType
+            )}' is not assignable to type '${this.getElement(leftNode.type!)}'`
+          );
       }
       this.idTable[this.source[startPos].elemId].assigned=true;
     }

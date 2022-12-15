@@ -62,15 +62,26 @@ export class RPN {
       this.result.push(this.source[this.pos]);
       this.nextNode();
     }
-    if (this.source[this.pos].tableId == 2 && this.source[this.pos].elemId === 11) {
+
+    if (
+      this.source[this.pos].tableId == 1 &&
+      this.source[this.pos].elemId <= 1
+    ) {
+      this.result.push(this.source[this.pos]);
       this.nextNode();
-      this.begin();
-      if (this.source[this.pos].tableId == 2) {
-        if (this.source[this.pos].elemId == 12) {
-          this.nextNode();
+    }
+      if (
+        this.source[this.pos].tableId == 2 &&
+        this.source[this.pos].elemId === 11
+      ) {
+        this.nextNode();
+        this.begin();
+        if (this.source[this.pos].tableId == 2) {
+          if (this.source[this.pos].elemId == 12) {
+            this.nextNode();
+          }
         }
       }
-    }
     if (this.source[this.pos].elemId == 17) {
       lem = this.source[this.pos];
     }

@@ -1,7 +1,6 @@
 import { IIdentifier, NodeInterface } from '../scanner/LexAnalyzer';
 import { words } from '../../tables/table-words';
 import { limiters } from '../../tables/table-limiters';
-import { RPN } from './RPN';
 
 export interface MatcherInterface {
   tableId: number;
@@ -143,18 +142,12 @@ export class ParserClass {
     switch (branching) {
       case true: {
         res = rules.reduce((prev, cur) => {
-          if (typeof cur === 'boolean') {
-            return prev || cur;
-          }
           return prev || cur();
         }, false);
         break;
       }
       case false: {
         res = rules.reduce((prev, cur) => {
-          if (typeof cur === 'boolean') {
-            return prev && cur;
-          }
           return prev && cur();
         }, true);
         break;
@@ -193,6 +186,7 @@ export class ParserClass {
     const stack: NodeInterface[] = [];
     nodesRPN.forEach(node => {
       switch (node.tableId) {
+        case 1:
         case 3:
         case 4: {
           stack.push(this.getType(node));
@@ -281,7 +275,7 @@ export class ParserClass {
       case 3: {
         if (
           this.getElement(node)?.match(
-            /^\d*\.\d*([Ee]?[+-]?\d+)?(?=[^\w])/
+            /^\d*\.\d*?$/
           )
         ) {
           return types.FLOAT;
@@ -301,7 +295,7 @@ export class ParserClass {
         
       }
     }
-    throw new Error("What's happening here");
+    throw new Error("What's happening here?");
   };
 
   checkDecl = (node: NodeInterface) => {
