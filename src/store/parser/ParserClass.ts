@@ -39,7 +39,7 @@ export class ParserClass {
     this.numTable = numTable;
   }
 
-  getElement = (element:NodeInterface) => {
+  getElement = (element: NodeInterface) => {
     switch (element.tableId) {
       case 1: {
         return words[element.elemId].name;
@@ -61,30 +61,6 @@ export class ParserClass {
       throw new Error();
     }
     let result: boolean;
-    console.log(
-      'reqiure ' +
-        this.getElement(
-          this.source[this.pos]
-        ) +
-        ' ' +
-        this.source[this.pos].tableId +
-        ' ' +
-        this.source[this.pos].elemId
-    );
-    if (elemId !== undefined) {
-      console.log(
-        'wait ' +
-        this.getElement({ tableId, elemId }) +
-          ' ' +
-          tableId +
-          ' ' +
-          elemId
-      );
-    } else {
-      console.log('wait ' + tableId);
-    }
-    console.log('pos: ' + this.pos);
-
     if (elemId !== undefined) {
       result =
         this.source[this.pos].elemId === elemId &&
@@ -178,11 +154,11 @@ export class ParserClass {
           )}' is not assignable to type '${this.getElement(types.BOOL)}'`
         );
       }
-    }   
+    }
     return expRes;
-  }
+  };
 
-  checkExp = (nodesRPN: NodeInterface[], position: number):NodeInterface => {    
+  checkExp = (nodesRPN: NodeInterface[], position: number): NodeInterface => {
     const stack: NodeInterface[] = [];
     nodesRPN.forEach(node => {
       switch (node.tableId) {
@@ -195,15 +171,17 @@ export class ParserClass {
         case 2:
           if (node.elemId == 15) {
             stack.pop();
-            stack.push(types.BOOL)
+            stack.push(types.BOOL);
             break;
           }
-          stack.push(this.checkId(
-           stack.pop()!.elemId,
-            stack.pop()!.elemId,
-            node.elemId,
-            position
-          ));
+          stack.push(
+            this.checkId(
+              stack.pop()!.elemId,
+              stack.pop()!.elemId,
+              node.elemId,
+              position
+            )
+          );
       }
       position++;
     });
@@ -216,7 +194,7 @@ export class ParserClass {
     leftType: number,
     op: number,
     position: number
-  ):NodeInterface => {
+  ): NodeInterface => {
     switch (op) {
       case 20:
       case 23: {
@@ -270,14 +248,9 @@ export class ParserClass {
   };
 
   getType = (node: NodeInterface): NodeInterface => {
-    console.log(node);
     switch (node.tableId) {
       case 3: {
-        if (
-          this.getElement(node)?.match(
-            /^\d*\.\d*?$/
-          )
-        ) {
+        if (this.getElement(node)?.match(/^\d*\.\d*?$/)) {
           return types.FLOAT;
         } else return types.INT;
       }
@@ -292,18 +265,15 @@ export class ParserClass {
       }
       case 4: {
         return this.checkDecl(node);
-        
       }
     }
     throw new Error("What's happening here?");
   };
 
   checkDecl = (node: NodeInterface) => {
-    let identifier = this.idTable[node.elemId];    
+    let identifier = this.idTable[node.elemId];
     if (!identifier.type) {
-      throw new Error(
-        `Undeclared variable ${this.getElement(node)}`
-      );
+      throw new Error(`Undeclared variable ${this.getElement(node)}`);
     }
     if (!identifier.assigned) {
       throw new Error(

@@ -19,6 +19,7 @@ export class LexAnalyzer {
   result: NodeInterface[] = [];
   idTable: IIdentifier[] = [];
   numTable: string[] = [];
+  errorArr: string[] = [];
 
   setSource = (source: string) => {
     this.source = source;
@@ -31,7 +32,7 @@ export class LexAnalyzer {
   startAnalyzing = () => {
     while (this.source.length > 0) {
       let matcher: string | undefined;
-      const wordIndex = words.findIndex((word, index) => {        
+      const wordIndex = words.findIndex((word, index) => {
         if (word.reg.exec(this.source)?.[0]) {
           this.source = this.source.slice(word.name.length);
           return index;
@@ -70,7 +71,7 @@ export class LexAnalyzer {
             elemId:
               this.idTable.push({
                 value: matcher,
-                assigned: false
+                assigned: false,
               }) - 1,
           });
         }
@@ -92,8 +93,7 @@ export class LexAnalyzer {
         } else {
           this.result.push({
             tableId: 3,
-            elemId:
-              this.numTable.push(numeric) - 1,
+            elemId: this.numTable.push(numeric) - 1,
           });
         }
         this.source = this.source.slice(matcher.length);
@@ -114,8 +114,17 @@ export class LexAnalyzer {
         this.source = this.source.slice(matcher.length);
         continue;
       }
-
-      throw new Error(`Can't find the name ${this.source.split(' ')[0]}`);
+      let errorSymbol = this.source.split(/\s|\\n|\\r/).shift();
+      this.source = this.source.slice(errorSymbol!.length);
+      this.errorArr.push(errorSymbol!);
+    }
+    if (this.errorArr.length) {
+      const errorMessage = this.errorArr
+        .map(error => {
+          return `Can't find the name ${error} `;
+        })
+        .join('\n');
+      throw new Error(errorMessage);
     }
     console.log(this.result);
     console.log(this.idTable);
@@ -124,22 +133,20 @@ export class LexAnalyzer {
     parser.start();
   };
 
-  toBinary = (num: string):string => {
+  toBinary = (num: string): string => {
     let numType: string = '';
     Object.values(numbers).forEach((val, key) => {
       if (val.exec(num)) {
         if (!numType) {
-           numType = Object.keys(numbers)[key];
-        }               
+          numType = Object.keys(numbers)[key];
+        }
       }
-    })
-    console.log(num); 
-    console.log(numType);
+    });
     switch (numType) {
-      case 'real':{
+      case 'real': {
         return parseFloat(num).toString(2);
       }
-      case 'bin': {        
+      case 'bin': {
         return num.slice(0, -1);
       }
       case 'oct': {
@@ -149,12 +156,12 @@ export class LexAnalyzer {
         if (num.split('').pop()?.match(/D|d/)) {
           num = num.slice(0, -1);
         }
-        return parseInt(num, 10).toString(2)
+        return parseInt(num, 10).toString(2);
       }
       case 'hex': {
         return parseInt(num.slice(0, -1), 16).toString(2);
-        }
+      }
     }
-    return '2'
-  }
+    return '2';
+  };
 }

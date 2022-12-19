@@ -9,7 +9,7 @@ export const expressions = {
   },
   word: {
     name: 'word',
-    reg: /^[A-Za-z][A-Za-z0-9]*/,
+    reg: /^[A-Za-z][A-Za-z0-9]*(?=[^\w])/,
   },
   comment: {
     name: 'comment',

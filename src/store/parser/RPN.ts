@@ -15,8 +15,6 @@ export class RPN {
   };
 
   begin = () => {
-    console.log('begin');
-    console.log(this.source[this.pos]);
     this.summ();
     let lim: NodeInterface;
     while (this.source[this.pos].tableId == 2 && this.source[this.pos].elemId <= 5) {
@@ -28,8 +26,6 @@ export class RPN {
   };
 
   summ = () => {
-    console.log('sum');
-    console.log(this.source[this.pos]);
     let lim: NodeInterface;
     this.mult();
     while (this.source[this.pos].tableId == 2 && this.source[this.pos].elemId >= 18 && this.source[this.pos].elemId <= 20) {
@@ -41,11 +37,8 @@ export class RPN {
   };
 
   mult = () => {
-    console.log('mult');
-    console.log(this.source[this.pos]);
     let lim: NodeInterface;
     this.sym();
-
     while (this.source[this.pos].tableId == 2 && this.source[this.pos].elemId >= 21 && this.source[this.pos].elemId <= 23) {
       lim = this.source[this.pos];
       this.nextNode();
@@ -55,14 +48,7 @@ export class RPN {
   };
 
   sym = () => {
-    console.log('sym');
-    console.log(this.source[this.pos]);
     let lem: NodeInterface | null = null;
-      if (this.source[this.pos].tableId == 3 || this.source[this.pos].tableId == 4) {
-      this.result.push(this.source[this.pos]);
-      this.nextNode();
-    }
-
     if (
       this.source[this.pos].tableId == 1 &&
       this.source[this.pos].elemId <= 1
@@ -87,6 +73,13 @@ export class RPN {
     }
     if (lem) {
       this.result.push(lem);
+      this.nextNode();
+    }
+    if (
+      this.source[this.pos].tableId == 3 ||
+      this.source[this.pos].tableId == 4
+    ) {
+      this.result.push(this.source[this.pos]);
       this.nextNode();
     }
   };
